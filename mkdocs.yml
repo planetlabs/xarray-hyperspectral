@@ -1,0 +1,12 @@
+site_name: "\U0001F308 xarray-hyperspectral"
+nav:
+  - Home: index.md
+  - Tutorials:
+    - Quickstart: tutorials/quickstart.ipynb
+theme:
+  name: material
+extra_css:  # extra css required to ensure xarray reprs render correctly
+  - css/notebook.css
+plugins:
+  - mkdocs-jupyter:
+      execute: true

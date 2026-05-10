@@ -1,0 +1,61 @@
+stages:
+  - test
+  - build
+  - deploy
+
+pytest:
+  stage: test
+  image: 
+    name: python:$PY_VERSION
+  before_script:
+    - pip install uv
+    - uv sync --group dev
+  script:
+    - uv run pytest
+  parallel:
+    matrix:
+      - PY_VERSION: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+  only:
+    - main
+    - merge_requests
+
+lint:
+  image: python:3.12
+  stage: test
+  script:
+    - pip install uv
+    - uv sync --group dev
+    - uv run ruff check src
+  only:
+    - main
+    - merge_requests
+
+build-docs:
+  image: python:3.12
+  stage: build
+  cache:
+    paths:
+      - .cache/mkdocs-jupyter/
+  script:
+    - pip install uv
+    - uv sync --group docs
+    - uv run mkdocs build --strict
+  only:
+    - main
+    - merge_requests
+
+pages:
+  image: python:3.12
+  stage: deploy
+  cache:
+    paths:
+      - .cache/mkdocs-jupyter/
+  script:
+    - pip install uv
+    - uv sync --group docs
+    - uv run mkdocs build --strict --site-dir public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
