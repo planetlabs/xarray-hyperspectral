@@ -47,6 +47,10 @@ CF_ATTRS = {
         "long_name": "Full Width at Half Maximum",
         "units": "nm",
     },
+    "radiometric_coefficients": {
+        "long_name": "Applied Radiometric Coefficients",
+        "units": "W m-2 sr-1 um-1",
+    },
     "radiance": {
         "standard_name": "toa_outgoing_radiance_per_unit_wavelength",
         "long_name": "Top-of-Atmosphere Radiance",
@@ -311,6 +315,14 @@ def open_tanager(
         # Spectral auxiliary coordinates
         if "fwhm" not in drop:
             coords["fwhm"] = xr.Variable("band", fwhm_vals, attrs=CF_ATTRS["fwhm"])
+        if "radiometric_coefficients" not in drop:
+            rc = cube_ds.attrs.get("applied_radiometric_coefficients")
+            if rc is not None:
+                coords["radiometric_coefficients"] = xr.Variable(
+                    "band",
+                    np.asarray(rc),
+                    attrs=CF_ATTRS["radiometric_coefficients"],
+                )
         if "good_wavelengths" not in drop:
             gw = cube_ds.attrs.get("good_wavelengths")
             if gw is not None:

@@ -21,13 +21,16 @@ LR_Y = UL_Y - NY * PIXEL_SIZE
 EPSG = 32750
 
 
-def _add_cube_attrs(ds, *, include_good_wavelengths=False):
+def _add_cube_attrs(ds, *, include_good_wavelengths=False, include_radiometric_coefficients=False):
     ds.attrs["wavelengths"] = WAVELENGTHS
     ds.attrs["wavelengths_units"] = "nm"
     ds.attrs["fwhm"] = FWHM
     ds.attrs["fwhm_units"] = "nm"
     if include_good_wavelengths:
         ds.attrs["good_wavelengths"] = np.ones(NBANDS, dtype=np.uint8)
+    if include_radiometric_coefficients:
+        ds.attrs["applied_radiometric_coefficients"] = np.ones(NBANDS, dtype=np.float32)
+        ds.attrs["applied_radiometric_coefficients_units"] = "W/(m^2 sr um)"
 
 
 def _add_geo_swath(swath):
@@ -104,7 +107,7 @@ def basic_radiance_path(tmp_path):
             data=RNG.random((NBANDS, NY, NX)).astype(np.float32),
         )
         cube.attrs["_FillValue"] = np.float32(-9999.0)
-        _add_cube_attrs(cube)
+        _add_cube_attrs(cube, include_radiometric_coefficients=True)
         _add_ancillary_2d(df)
         _add_geo_swath(swath)
         _add_struct_metadata(f, is_grid=False)
@@ -146,7 +149,7 @@ def ortho_radiance_path(tmp_path):
             data=RNG.random((NBANDS, NY, NX)).astype(np.float32),
         )
         cube.attrs["_FillValue"] = np.float32(-9999.0)
-        _add_cube_attrs(cube)
+        _add_cube_attrs(cube, include_radiometric_coefficients=True)
         _add_ancillary_2d(df)
         _add_time_2d(df)
         _add_struct_metadata(f, is_grid=True)
