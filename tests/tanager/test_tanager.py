@@ -168,7 +168,9 @@ class TestOpenTanager:
             == "atmosphere_mass_content_of_water_vapor"
         )
         assert {"reflectance", "reflectance_uncertainty"} == set(ds.data_vars)
-        assert ds["reflectance"].attrs["ancillary_variables"] == "reflectance_uncertainty"
+        assert (
+            ds["reflectance"].attrs["ancillary_variables"] == "reflectance_uncertainty"
+        )
         assert ds["reflectance_uncertainty"].dims == (
             "band",
             "alongtrack",
@@ -199,7 +201,9 @@ class TestOpenTanager:
         }
         assert expected_coords == set(ds.coords)
         assert ds.coords["spatial_ref"].attrs["epsg_code"] == EPSG
-        assert ds.coords["spatial_ref"].attrs["grid_mapping_name"] == "transverse_mercator"
+        assert (
+            ds.coords["spatial_ref"].attrs["grid_mapping_name"] == "transverse_mercator"
+        )
         assert ds.coords["y"].attrs["axis"] == "Y"
         assert ds.coords["x"].attrs["axis"] == "X"
         assert np.issubdtype(ds["time"].dtype, np.datetime64)
@@ -250,6 +254,26 @@ class TestOpenTanager:
         ds = open_tanager(basic_radiance_path)
         assert "fwhm" in ds.coords
         assert ds["fwhm"].attrs["units"] == "nm"
+
+    def test_swath_without_metadata(self, basic_radiance_without_metadata):
+        """Test that open_tanager() can still open a swath product even if the
+        ancillary metadata is missing. The returned dataset should still have
+        the radiance data and the correct dimensions. This will make the
+        backend more robust to future changes in the product structure."""
+        ds = open_tanager(basic_radiance_without_metadata)
+        assert "radiance" in ds
+        assert ds.sizes == {"band": NBANDS, "alongtrack": NY, "crosstrack": NX}
+        assert "latitude" not in ds.coords
+        assert "longitude" not in ds.coords
+        assert "time" not in ds.coords
+
+    def test_ortho_without_metadata(self, ortho_radiance_without_metadata):
+        ds = open_tanager(ortho_radiance_without_metadata)
+        assert "radiance" in ds
+        assert ds.sizes == {"band": NBANDS, "y": NY, "x": NX}
+        assert "sensor_zenith" not in ds.coords
+        assert "time" not in ds.coords
+        assert "spatial_ref" in ds.coords
 
     def test_drop_variables(self, basic_radiance_path):
         ds = open_tanager(basic_radiance_path, drop_variables=["latitude"])

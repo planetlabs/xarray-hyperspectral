@@ -333,8 +333,9 @@ def open_tanager(
                 )
 
         # Geolocation coordinates (swath only)
-        if layout.geometry != "grid":
-            geo_fields = f[f"{layout.hyp_group}/Geolocation Fields"]
+        geo_path = f"{layout.hyp_group}/Geolocation Fields"
+        if layout.geometry != "grid" and geo_path in f:
+            geo_fields = f[geo_path]
             if "latitude" not in drop:
                 coords["latitude"] = xr.Variable(
                     (dim_y, dim_x),

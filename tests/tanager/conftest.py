@@ -21,7 +21,9 @@ LR_Y = UL_Y - NY * PIXEL_SIZE
 EPSG = 32750
 
 
-def _add_cube_attrs(ds, *, include_good_wavelengths=False, include_radiometric_coefficients=False):
+def _add_cube_attrs(
+    ds, *, include_good_wavelengths=False, include_radiometric_coefficients=False
+):
     ds.attrs["wavelengths"] = WAVELENGTHS
     ds.attrs["wavelengths_units"] = "nm"
     ds.attrs["fwhm"] = FWHM
@@ -96,9 +98,7 @@ def _add_time_2d(data_fields):
     time.attrs["_FillValue"] = np.float64(-9999.0)
 
 
-@pytest.fixture
-def basic_radiance_path(tmp_path):
-    path = tmp_path / "basic_radiance.h5"
+def _write_basic_radiance(path, *, skip_metadata: bool = False):
     with h5py.File(path, "w") as f:
         swath = f.create_group("HDFEOS/SWATHS/HYP")
         df = swath.create_group("Data Fields")
@@ -108,10 +108,24 @@ def basic_radiance_path(tmp_path):
         )
         cube.attrs["_FillValue"] = np.float32(-9999.0)
         _add_cube_attrs(cube, include_radiometric_coefficients=True)
-        _add_ancillary_2d(df)
-        _add_geo_swath(swath)
-        _add_struct_metadata(f, is_grid=False)
+        if not skip_metadata:
+            _add_ancillary_2d(df)
+            _add_geo_swath(swath)
+            _add_struct_metadata(f, is_grid=False)
     return path
+
+
+@pytest.fixture
+def basic_radiance_path(tmp_path):
+    return _write_basic_radiance(tmp_path / "basic_radiance.h5")
+
+
+@pytest.fixture
+def basic_radiance_without_metadata(tmp_path):
+    return _write_basic_radiance(
+        tmp_path / "basic_radiance_without_metadata.h5",
+        skip_metadata=True,
+    )
 
 
 @pytest.fixture
@@ -137,9 +151,7 @@ def basic_sr_path(tmp_path):
     return path
 
 
-@pytest.fixture
-def ortho_radiance_path(tmp_path):
-    path = tmp_path / "ortho_radiance.h5"
+def _write_ortho_radiance(path, *, skip_metadata: bool = False):
     with h5py.File(path, "w") as f:
         grid = f.create_group("HDFEOS/GRIDS/HYP")
         grid.attrs["epsg_code"] = np.int64(EPSG)
@@ -150,10 +162,25 @@ def ortho_radiance_path(tmp_path):
         )
         cube.attrs["_FillValue"] = np.float32(-9999.0)
         _add_cube_attrs(cube, include_radiometric_coefficients=True)
-        _add_ancillary_2d(df)
-        _add_time_2d(df)
+        if not skip_metadata:
+            _add_ancillary_2d(df)
+            _add_time_2d(df)
+        # Always expect struct metadata for ortho product
         _add_struct_metadata(f, is_grid=True)
     return path
+
+
+@pytest.fixture
+def ortho_radiance_path(tmp_path):
+    return _write_ortho_radiance(tmp_path / "ortho_radiance.h5")
+
+
+@pytest.fixture
+def ortho_radiance_without_metadata(tmp_path):
+    return _write_ortho_radiance(
+        tmp_path / "ortho_radiance_without_metadata.h5",
+        skip_metadata=True,
+    )
 
 
 @pytest.fixture
