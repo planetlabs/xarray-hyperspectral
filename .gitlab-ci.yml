@@ -1,0 +1,25 @@
+stages:
+  - deploy
+
+deploy:
+  image: ghcr.io/astral-sh/uv:python3.12-trixie-slim
+  tags:
+    - gcp-gitlab-runner
+  stage: deploy
+  variables:
+    UV_CACHE_DIR: "$CI_PROJECT_DIR/.uv-cache"
+  cache:
+    key:
+      files:
+        - pyproject.toml
+    paths:
+      - .uv-cache
+  script:
+    - uv build
+    - uvx twine upload dist/*
+  after_script:
+    - uv cache prune --ci
+  only:
+    - main
+    - tags
+  when: manual
