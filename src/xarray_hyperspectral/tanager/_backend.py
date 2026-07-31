@@ -13,6 +13,7 @@ import datetime
 import importlib.metadata
 import os
 import re
+from typing import ClassVar
 
 import h5py
 import numpy as np
@@ -449,7 +450,7 @@ class TanagerBackendEntrypoint(xr.backends.BackendEntrypoint):
     """
 
     description = "Open Planet Tanager HDF-EOS5 hyperspectral data cubes (.h5)"
-    open_dataset_parameters = ["filename_or_obj", "drop_variables"]
+    open_dataset_parameters: ClassVar[list[str]] = ["filename_or_obj", "drop_variables"]
 
     def guess_can_open(self, filename_or_obj) -> bool:
         """Return True if the file looks like a Tanager HDF-EOS5 product.
@@ -461,14 +462,14 @@ class TanagerBackendEntrypoint(xr.backends.BackendEntrypoint):
         """
         try:
             p = str(filename_or_obj)
-        except Exception:
+        except (TypeError, ValueError):
             return False
         if not p.endswith(".h5"):
             return False
         try:
             with h5py.File(p, "r") as f:
                 return "HDFEOS/GRIDS/HYP" in f or "HDFEOS/SWATHS/HYP" in f
-        except Exception:
+        except OSError:
             return False
 
     def open_dataset(
